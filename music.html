@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Player</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: black;
+    font-family: Arial, sans-serif;
+    color: white;
+  }
+
+  .player {
+    width: 320px;
+    background: #222;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  }
+
+  .title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .artist {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 10px;
+  }
+
+  .controls button {
+    padding: 10px;
+    margin: 5px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+  }
+
+  .controls button:hover {
+    transform: scale(1.1);
+  }
+
+  .progress-container {
+    width: 100%;
+    height: 5px;
+    background: #555;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+
+  .progress {
+    height: 100%;
+    width: 0%;
+    background: #1db954;
+    border-radius: 5px;
+  }
+
+  .time {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  .volume {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .playlist {
+    margin-top: 15px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .song {
+    padding: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+  }
+
+  .song:hover {
+    background: #803333;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="player">
+  <div class="title" id="title">Song Title</div>
+  <div class="artist" id="artist">Artist Name</div>
+
+  <div class="controls">
+    <button onclick="prevSong()">⏮</button>
+    <button onclick="togglePlay()">⏯</button>
+    <button onclick="nextSong()">⏭</button>
+  </div>
+
+  <div class="progress-container" onclick="setProgress(event)">
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="time">
+    <span id="current">0:00</span>
+    <span id="duration">0:00</span>
+  </div>
+
+  <input type="range" min="0" max="1" step="0.01" class="volume" onchange="setVolume(this.value)">
+
+  <div class="playlist" id="playlist"></div>
+</div>
+
+<audio id="audio"></audio>
+
+<script>
+  const songs = [
+    { title: "Sample Song 1", artist: "Artist 1", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    { title: "Sample Song 2", artist: "Artist 2", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+    { title: "Sample Song 3", artist: "Artist 3", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
+  ];
+
+  let currentIndex = 0;
+  const audio = document.getElementById("audio");
+
+  function loadSong(index) {
+    const song = songs[index];
+    document.getElementById("title").innerText = song.title;
+    document.getElementById("artist").innerText = song.artist;
+    audio.src = song.src;
+  }
+
+  function togglePlay() {
+    if (audio.paused) audio.play();
+    else audio.pause();
+  }
+
+  function nextSong() {
+    currentIndex = (currentIndex + 1) % songs.length;
+    loadSong(currentIndex);
+    audio.play();
+  }
+
+  function prevSong() {
+    currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+    loadSong(currentIndex);
+    audio.play();
+  }
+
+  function setVolume(val) {
+    audio.volume = val;
+  }
+
+  function setProgress(e) {
+    const width = e.currentTarget.clientWidth;
+    const clickX = e.offsetX;
+    audio.currentTime = (clickX / width) * audio.duration;
+  }
+
+  audio.addEventListener("timeupdate", () => {
+    const progress = document.getElementById("progress");
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progress.style.width = percent + "%";
+
+    document.getElementById("current").innerText = formatTime(audio.currentTime);
+    document.getElementById("duration").innerText = formatTime(audio.duration);
+  });
+
+  function formatTime(time) {
+    if (isNaN(time)) return "0:00";
+    const min = Math.floor(time / 60);
+    const sec = Math.floor(time % 60).toString().padStart(2, '0');
+    return `${min}:${sec}`;
+  }
+
+  audio.addEventListener("ended", nextSong);
+
+  function loadPlaylist() {
+    const list = document.getElementById("playlist");
+    list.innerHTML = "";
+    songs.forEach((song, index) => {
+      const div = document.createElement("div");
+      div.className = "song";
+      div.innerText = song.title + " - " + song.artist;
+      div.onclick = () => {
+        currentIndex = index;
+        loadSong(index);
+        audio.play();
+      };
+      list.appendChild(div);
+    });
+  }
+
+  loadSong(currentIndex);
+  loadPlaylist();
+</script>
+
+</body>
+</html>
